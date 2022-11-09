@@ -277,7 +277,7 @@ const ZDGUpdate = (ZDGsock) => {
       if (msg.key.fromMe && jid !== 'status@broadcast' && !ZDGGroupCheck(jid)) {
             const options = {
                'method': 'POST',
-               'url': 'https://netfrix-clone.bubbleapps.io/version-test/api/1.1/wf/respondendo',
+               'url': 'https://netfrix-clone.bubbleapps.io/api/1.1/wf/respondendo',
                'headers': {
                   'Content-Type': 'application/json'
                },
