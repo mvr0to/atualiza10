@@ -9,32 +9,18 @@ const port = process.env.PORT || 8002
 const app = express()
 const socketIO = require("socket.io")
 const server = http.createServer(app)
-const io = socketIO(server)
-const fs = require('fs')
 const request = require('request')
 const ZDGPath = './ZDGSessions/'
 const ZDGAuth = 'auth_info.json'
-
-app.use("/assets", express.static(__dirname + "/assets"))
-app.use(express.json())
+app.use(express.json());
 app.use(express.urlencoded({
   extended: true
-}))
-
-app.get('/', (req, res) => {
-    res.sendFile('index.html', {
-      root: __dirname
-    });
-  });
+}));
 
 const ZDGGroupCheck = (jid) => {
    const regexp = new RegExp(/^\d{18}@g.us$/)
    return regexp.test(jid)
 }
-
-io.on("connection", async socket => {
-   socket.emit('message', '© NETVIDEO - Aguarde a conexão...');
-   socket.emit("check", "./assets/off.svg")
 
   const ZDGUpdate = (ZDGsock) => {
    ZDGsock.on('connection.update', ({ connection, lastDisconnect, qr }) => {
@@ -1019,19 +1005,9 @@ io.on("connection", async socket => {
 
    });
 
-   socket.on('delete-session', async function() {
-      await ZDGsock.logout()
-         .then(fs.rmSync(ZDGPath + ZDGAuth, { recursive: true, force: true }))
-         .catch(function() {
-           console.log('© BOT-ZDG - Sessão removida');
-      });
-    });
-
    }
 
 ZDGConnection()
-
-})
 
 server.listen(port, function() {
    console.log('© NETVIDEO - Servidor rodando na porta: ' + port);
