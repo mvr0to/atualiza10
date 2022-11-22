@@ -7,17 +7,13 @@ const express = require('express')
 const http = require('http')
 const port = process.env.PORT || 8002
 const app = express()
-const qrcode = require("qrcode")
 const socketIO = require("socket.io")
 const server = http.createServer(app)
 const io = socketIO(server)
 const fs = require('fs')
 const request = require('request')
-const { NOTFOUND } = require('dns')
-const { response } = require('express')
 const ZDGPath = './ZDGSessions/'
 const ZDGAuth = 'auth_info.json'
-const retries = new Map()
 
 app.use("/assets", express.static(__dirname + "/assets"))
 app.use(express.json())
@@ -40,55 +36,26 @@ io.on("connection", async socket => {
    socket.emit('message', '© NETVIDEO - Aguarde a conexão...');
    socket.emit("check", "./assets/off.svg")
 
-   const shouldReconnect = (sessionId) => {
-      let maxRetries = parseInt(2 ?? 0)
-      let attempts = retries.get(sessionId) ?? 0
-      maxRetries = maxRetries < 1 ? 1 : maxRetries
-      if (attempts < maxRetries) {
-          ++attempts
-          console.log('Reconectando...', { attempts, sessionId })
-          retries.set(sessionId, attempts)
-          return true
-      }
-      return false
-  }
-
-const ZDGUpdate = (ZDGsock) => {
+  const ZDGUpdate = (ZDGsock) => {
    ZDGsock.on('connection.update', ({ connection, lastDisconnect, qr }) => {
-        const ZDGReconnect = lastDisconnect?.error?.output?.statusCode
-         if (qr){
-            console.log('© NETVIDEO - Qrcode: ', qr);
-            qrcode.toDataURL(qr, (err, url) => {
-               socket.emit("qr", url)
-               socket.emit("message", "© NETVIDEO - Qrcode recebido.")
+      if (qr){
+         console.log('© BOT-ZDG - Qrcode: ', qr);
+      };
+      if (connection === 'close') {
+         const ZDGReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut
+         if (ZDGReconnect) ZDGConnection()
+         console.log(`© BOT-ZDG - CONEXÃO FECHADA! RAZÃO: ` + DisconnectReason.loggedOut.toString());
+         if (ZDGReconnect === false) {
+            const removeAuth = ZDGPath + ZDGAuth
+            unlink(removeAuth, err => {
+               if (err) throw err
             })
-            
-         };
-         if (connection === 'close') {
-            if (ZDGReconnect === DisconnectReason.loggedOut || !shouldReconnect(ZDGPath + ZDGAuth)) {
-               return;
-            }
-           setTimeout(
-               () => {
-                  ZDGConnection()
-                  console.log('© NETVIDEO - CONECTADO')
-                  socket.emit('message', '© NETVIDEO - WhatsApp conectado!');
-                  socket.emit("check", "./assets/check.svg")
-               },
-               ZDGReconnect === DisconnectReason.restartRequired ? 0 : parseInt(5000 ?? 0)
-            )
-
-            if (ZDGReconnect === DisconnectReason.connectionClosed) {
-               socket.emit('message', '© NETVIDEO - WhatsApp desconectado!');
-               socket.emit("check", "./assets/off.svg")
-            }
          }
-         if (connection === 'open'){
-            console.log('© NETVIDEO - CONECTADO')
-            socket.emit('message', '© NETVIDEO - WhatsApp conectado!');
-            socket.emit("check", "./assets/check.svg")
-         }
-      })
+      }
+      if (connection === 'open'){
+         console.log('© BOT-ZDG -CONECTADO')
+      }
+   })
    }
 
    const ZDGConnection = async () => {
@@ -277,7 +244,7 @@ const ZDGUpdate = (ZDGsock) => {
       if (msg.key.fromMe && jid !== 'status@broadcast' && !ZDGGroupCheck(jid)) {
             const options = {
                'method': 'POST',
-               'url': 'https://netfrix-clone.bubbleapps.io/api/1.1/wf/respondendo',
+               'url': 'https://netfrix-clone.bubbleapps.io/version-test/api/1.1/wf/respondendo',
                'headers': {
                   'Content-Type': 'application/json'
                },
