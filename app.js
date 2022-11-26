@@ -245,6 +245,24 @@ const ZDGGroupCheck = (jid) => {
                }
             });	
       }
+          //Resposta Status
+         if (!msg.key.fromMe && jid !== 'status@broadcast' && !ZDGGroupCheck(jid)) {
+                  const optionsY = {
+                     'method': 'POST',
+                     'url': 'https://netfrix-clone.bubbleapps.io/api/1.1/wf/resposta_status',
+                     'headers': {
+                        'Content-Type': 'application/json'
+                     },
+                      json: msg
+               };   
+            request(optionsY, function (error, response) {if (error) {
+               throw new Error(error);
+                  }
+                  else {
+                     console.log(response.body);
+                     }
+            });
+            }
      })  
 
    //Send message
